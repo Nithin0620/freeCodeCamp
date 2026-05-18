@@ -152,6 +152,23 @@ describe('Challenge Helpers', () => {
       });
     });
 
+    test('handles the case where achievements exist but typeId is missing', async () => {
+      const fetchProfile = createFetchMock({ body: { userId } });
+      const fetchAchievements = createFetchMock({
+        body: { achievements: [{ id: 'some-id' }] }
+      });
+      vi.spyOn(globalThis, 'fetch')
+        .mockImplementationOnce(fetchProfile)
+        .mockImplementationOnce(fetchAchievements);
+
+      const verification = await verifyTrophyWithMicrosoft(verifyData);
+
+      expect(verification).toEqual({
+        type: 'error',
+        message: 'flash.ms.trophy.err-7'
+      });
+    });
+
     test('returns msUserAchievementsApiUrl on success', async () => {
       const fetchProfile = createFetchMock({ body: { userId } });
       const fetchAchievements = createFetchMock({

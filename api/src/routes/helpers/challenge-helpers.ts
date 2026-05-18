@@ -75,6 +75,11 @@ type NoTrophyError = {
   variables: { msUsername: string };
 };
 
+type APIStructureError = {
+  type: 'error';
+  message: 'flash.ms.trophy.err-7';
+};
+
 type Validated = {
   type: 'success';
   msUserAchievementsApiUrl: string;
@@ -119,11 +124,18 @@ export async function verifyTrophyWithMicrosoft({
       message: 'flash.ms.trophy.err-6'
     } as NoAchievementsError;
 
-  // TODO: handle the case where there are achievements, but the `typeId` is not
-  // a property of the achievements. This suggests that Microsoft has changed
-  // their API and, to aid debugging, we should report a different error
-  // message.
-  const earnedTrophy = achievements?.some(a => a.typeId === msTrophyId);
+  // Validate that achievements have the expected typeId property
+  const hasTypeId = achievements.every(
+    a => 'typeId' in a && a.typeId !== undefined
+  );
+  if (!hasTypeId) {
+    return {
+      type: 'error',
+      message: 'flash.ms.trophy.err-7'
+    } as APIStructureError;
+  }
+
+  const earnedTrophy = achievements.some(a => a.typeId === msTrophyId);
 
   if (earnedTrophy) {
     return {
